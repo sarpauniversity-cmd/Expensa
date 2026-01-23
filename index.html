@@ -1,0 +1,2356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expensa - Smart Student Expense Tracker</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Framer Motion -->
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- Google Fonts - Plus Jakarta Sans & DM Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        body: ['"DM Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        neu: {
+                            base: '#E0E5EC',
+                            fg: '#3D4852',
+                            muted: '#6B7280',
+                            accent: '#6C63FF',
+                            'accent-light': '#8B84FF',
+                            'accent-secondary': '#38B2AC',
+                            placeholder: '#A0AEC0',
+                        }
+                    },
+                    boxShadow: {
+                        'neu-raised': '9px 9px 16px rgb(163,177,198,0.6), -9px -9px 16px rgba(255,255,255,0.5)',
+                        'neu-raised-hover': '12px 12px 20px rgb(163,177,198,0.7), -12px -12px 20px rgba(255,255,255,0.6)',
+                        'neu-raised-sm': '5px 5px 10px rgb(163,177,198,0.6), -5px -5px 10px rgba(255,255,255,0.5)',
+                        'neu-inset': 'inset 6px 6px 10px rgb(163,177,198,0.6), inset -6px -6px 10px rgba(255,255,255,0.5)',
+                        'neu-inset-deep': 'inset 10px 10px 20px rgb(163,177,198,0.7), inset -10px -10px 20px rgba(255,255,255,0.6)',
+                        'neu-inset-sm': 'inset 3px 3px 6px rgb(163,177,198,0.6), inset -3px -3px 6px rgba(255,255,255,0.5)',
+                    },
+                    borderRadius: {
+                        'neu': '32px',
+                        'neu-sm': '16px',
+                        'neu-xs': '12px',
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        * {
+            font-family: 'DM Sans', sans-serif;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            background-color: #E0E5EC;
+        }
+        
+        .font-display {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #E0E5EC;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgb(163,177,198,0.6);
+            border-radius: 10px;
+            box-shadow: inset 2px 2px 4px rgba(255,255,255,0.3);
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgb(163,177,198,0.8);
+        }
+        
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.4);
+            cursor: pointer;
+        }
+        
+        /* Custom checkbox styles */
+        input[type="checkbox"] {
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 8px;
+            background: #E0E5EC;
+            box-shadow: inset 3px 3px 6px rgb(163,177,198,0.6), inset -3px -3px 6px rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        input[type="checkbox"]:checked {
+            background: #6C63FF;
+            box-shadow: inset 3px 3px 6px rgba(0,0,0,0.2), inset -3px -3px 6px rgba(255,255,255,0.1);
+        }
+        
+        input[type="checkbox"]:checked::after {
+            content: '✓';
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            height: 100%;
+        }
+    </style>
+</head>
+<body class="bg-neu-base text-neu-fg min-h-screen">
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect, useContext, createContext, useRef, useCallback } = React;
+        const { motion, AnimatePresence } = Motion;
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDxtaanRjDFt3emiz78BlMGsDsII1o9JYA",
+            authDomain: "expensa-7328a.firebaseapp.com",
+            projectId: "expensa-7328a",
+            storageBucket: "expensa-7328a.firebasestorage.app",
+            messagingSenderId: "67425386087",
+            appId: "1:67425386087:web:02e62bd3ee2b42a2bf9ec2",
+            measurementId: "G-2R4F6JZN1C"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+        // Context
+        const AppContext = createContext();
+
+        // Icon Component
+        const Icon = ({ name, size = 24, className = "" }) => {
+            const iconRef = useRef(null);
+            
+            useEffect(() => {
+                if (iconRef.current) {
+                    iconRef.current.innerHTML = '';
+                    const icon = lucide.createElement(lucide.icons[name]);
+                    icon.setAttribute('width', size);
+                    icon.setAttribute('height', size);
+                    iconRef.current.appendChild(icon);
+                }
+            }, [name, size]);
+            
+            return <span ref={iconRef} className={`inline-flex ${className}`} />;
+        };
+
+        // Categories with colors
+        const categories = [
+            { id: 'food', name: 'Food', icon: 'UtensilsCrossed', color: '#38B2AC' },
+            { id: 'grocery', name: 'Grocery', icon: 'ShoppingCart', color: '#6C63FF' },
+            { id: 'online', name: 'Online Shopping', icon: 'Globe', color: '#8B84FF' },
+            { id: 'shopping', name: 'Shopping', icon: 'ShoppingBag', color: '#F59E0B' },
+            { id: 'education', name: 'Education', icon: 'GraduationCap', color: '#3B82F6' },
+            { id: 'transport', name: 'Transport', icon: 'Car', color: '#EC4899' },
+            { id: 'entertainment', name: 'Entertainment', icon: 'Film', color: '#EF4444' },
+            { id: 'custom', name: 'Custom', icon: 'Plus', color: '#6B7280' }
+        ];
+
+        // Food Prices - Real prices for Indian students with health data
+        const foodData = {
+            "Biriyani": { 
+                price: 100, 
+                health: 3, 
+                calories: 450,
+                protein: "High",
+                description: "Rich in protein but high in oil. Good for energy.",
+                tags: ["protein", "carbs"]
+            },
+            "Chicken Rice": { 
+                price: 100, 
+                health: 4, 
+                calories: 380,
+                protein: "High",
+                description: "Good protein source, balanced meal option.",
+                tags: ["protein", "balanced"]
+            },
+            "Non Veg Meals": { 
+                price: 120, 
+                health: 5, 
+                calories: 550,
+                protein: "High",
+                description: "Complete meal with protein, dal, vegetables. Most nutritious!",
+                tags: ["protein", "fiber", "balanced"]
+            },
+            "Veg Meals": { 
+                price: 75, 
+                health: 5, 
+                calories: 450,
+                protein: "Medium",
+                description: "Balanced nutrition with dal, sabzi, rice. Very healthy!",
+                tags: ["fiber", "vitamins", "balanced"]
+            },
+            "Variety Rice": { 
+                price: 40, 
+                health: 3, 
+                calories: 320,
+                protein: "Low",
+                description: "Quick energy, light on stomach. Add curd for better nutrition.",
+                tags: ["carbs", "light"]
+            },
+            "Mix Rice": { 
+                price: 50, 
+                health: 3, 
+                calories: 350,
+                protein: "Low",
+                description: "Mixed vegetables add some fiber. Decent budget option.",
+                tags: ["carbs", "fiber"]
+            },
+            "Curd Rice": { 
+                price: 40, 
+                health: 5, 
+                calories: 280,
+                protein: "Medium",
+                description: "Excellent for digestion, probiotic benefits. Very healthy!",
+                tags: ["probiotic", "cooling", "digestion"]
+            },
+            "Chapati": { 
+                price: 45, 
+                health: 4, 
+                calories: 350,
+                protein: "Medium",
+                description: "Whole wheat fiber, served with curry. Good nutrition.",
+                tags: ["fiber", "balanced"]
+            },
+            "Parotta": { 
+                price: 45, 
+                health: 2, 
+                calories: 400,
+                protein: "Low",
+                description: "Tasty but high in refined flour and oil. Limit intake.",
+                tags: ["carbs", "oily"]
+            },
+            "Dosa": { 
+                price: 40, 
+                health: 4, 
+                calories: 250,
+                protein: "Medium",
+                description: "Fermented batter aids digestion. Light and nutritious.",
+                tags: ["fermented", "light", "digestion"]
+            }
+        };
+
+        // Simple price lookup
+        const foodPrices = Object.fromEntries(
+            Object.entries(foodData).map(([name, data]) => [name, data.price])
+        );
+
+        // Meal availability by time
+        const afternoonMeals = ["Biriyani", "Chicken Rice", "Non Veg Meals", "Veg Meals", "Variety Rice", "Mix Rice", "Curd Rice", "Chapati", "Parotta"];
+        const nightMeals = ["Biriyani", "Chicken Rice", "Chapati", "Parotta", "Dosa"];
+
+        // Utilities
+        const formatCurrency = (amount) => `₹${parseFloat(amount || 0).toLocaleString('en-IN')}`;
+        const formatDate = (date) => new Date(date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+        const formatDateFull = (date) => new Date(date).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        const getToday = () => new Date().toISOString().split('T')[0];
+
+        // Toast Component
+        const Toast = ({ message, type, onClose }) => (
+            <motion.div
+                initial={{ opacity: 0, y: -20, x: '-50%' }}
+                animate={{ opacity: 1, y: 0, x: '-50%' }}
+                exit={{ opacity: 0, y: -20, x: '-50%' }}
+                className={`fixed top-6 left-1/2 z-50 px-6 py-4 rounded-neu-sm shadow-neu-raised flex items-center gap-3 bg-neu-base`}
+            >
+                <div className={`w-10 h-10 rounded-full shadow-neu-inset flex items-center justify-center ${type === 'error' ? 'text-red-500' : 'text-neu-accent-secondary'}`}>
+                    <Icon name={type === 'error' ? 'AlertCircle' : 'CheckCircle'} size={20} />
+                </div>
+                <span className="font-medium text-neu-fg">{message}</span>
+            </motion.div>
+        );
+
+        // Neumorphic Button
+        const Button = ({ children, variant = 'primary', className = '', ...props }) => {
+            const baseClass = "px-6 py-3 rounded-neu-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 outline-none";
+            
+            const variants = {
+                primary: "bg-neu-accent text-white shadow-[5px_5px_10px_rgb(163,177,198,0.6),-5px_-5px_10px_rgba(255,255,255,0.5)] hover:shadow-[7px_7px_14px_rgb(163,177,198,0.7),-7px_-7px_14px_rgba(255,255,255,0.6)] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.2),inset_-4px_-4px_8px_rgba(255,255,255,0.1)] focus:ring-2 focus:ring-neu-accent focus:ring-offset-2 focus:ring-offset-neu-base",
+                secondary: "bg-neu-base text-neu-fg shadow-neu-raised hover:shadow-neu-raised-hover hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-neu-inset focus:ring-2 focus:ring-neu-accent focus:ring-offset-2 focus:ring-offset-neu-base",
+                ghost: "bg-transparent text-neu-muted hover:text-neu-fg hover:bg-neu-base hover:shadow-neu-raised-sm focus:ring-2 focus:ring-neu-accent focus:ring-offset-2 focus:ring-offset-neu-base"
+            };
+            
+            return (
+                <motion.button
+                    whileTap={{ scale: 0.98 }}
+                    className={`${baseClass} ${variants[variant]} ${className}`}
+                    {...props}
+                >
+                    {children}
+                </motion.button>
+            );
+        };
+
+        // Neumorphic Input
+        const Input = ({ label, icon, className = '', ...props }) => (
+            <div className="space-y-2">
+                {label && <label className="text-sm font-medium text-neu-muted">{label}</label>}
+                <div className="relative">
+                    {icon && (
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neu-muted">
+                            <Icon name={icon} size={20} />
+                        </span>
+                    )}
+                    <input
+                        className={`w-full px-4 py-3.5 ${icon ? 'pl-12' : ''} bg-neu-base shadow-neu-inset rounded-neu-sm text-neu-fg placeholder-neu-placeholder focus:outline-none focus:shadow-neu-inset-deep focus:ring-2 focus:ring-neu-accent focus:ring-offset-2 focus:ring-offset-neu-base transition-all duration-300 ${className}`}
+                        {...props}
+                    />
+                </div>
+            </div>
+        );
+
+        // Neumorphic Card
+        const Card = ({ children, className = '', hover = true, inset = false, ...props }) => (
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={hover && !inset ? { y: -2 } : {}}
+                className={`bg-neu-base ${inset ? 'shadow-neu-inset' : 'shadow-neu-raised'} rounded-neu p-6 md:p-8 transition-all duration-300 ${hover && !inset ? 'hover:shadow-neu-raised-hover' : ''} ${className}`}
+                {...props}
+            >
+                {children}
+            </motion.div>
+        );
+
+        // Neumorphic Icon Well
+        const IconWell = ({ children, className = '', size = 'md' }) => {
+            const sizes = {
+                sm: 'w-10 h-10',
+                md: 'w-12 h-12',
+                lg: 'w-16 h-16'
+            };
+            return (
+                <div className={`${sizes[size]} rounded-full shadow-neu-inset-deep flex items-center justify-center ${className}`}>
+                    {children}
+                </div>
+            );
+        };
+
+        // Progress Ring
+        const ProgressRing = ({ percentage, size = 120, strokeWidth = 10, color = '#6C63FF' }) => {
+            const radius = (size - strokeWidth) / 2;
+            const circumference = radius * 2 * Math.PI;
+            const offset = circumference - (percentage / 100) * circumference;
+            
+            return (
+                <div className="relative" style={{ width: size, height: size }}>
+                    <svg className="transform -rotate-90" width={size} height={size}>
+                        <circle
+                            cx={size / 2}
+                            cy={size / 2}
+                            r={radius}
+                            fill="none"
+                            stroke="transparent"
+                            strokeWidth={strokeWidth}
+                            className="shadow-neu-inset"
+                        />
+                        <circle
+                            cx={size / 2}
+                            cy={size / 2}
+                            r={radius}
+                            fill="none"
+                            stroke="#E0E5EC"
+                            strokeWidth={strokeWidth}
+                            style={{ filter: 'drop-shadow(inset 3px 3px 6px rgb(163,177,198,0.6))' }}
+                        />
+                        <motion.circle
+                            cx={size / 2}
+                            cy={size / 2}
+                            r={radius}
+                            fill="none"
+                            stroke={color}
+                            strokeWidth={strokeWidth}
+                            strokeLinecap="round"
+                            initial={{ strokeDashoffset: circumference }}
+                            animate={{ strokeDashoffset: offset }}
+                            transition={{ duration: 1, ease: "easeOut" }}
+                            style={{ strokeDasharray: circumference }}
+                        />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-2xl font-bold font-display text-neu-fg">{Math.round(percentage)}%</span>
+                    </div>
+                </div>
+            );
+        };
+
+        // Landing Page
+        const LandingPage = ({ onNavigate }) => {
+            return (
+                <div className="min-h-screen">
+                    {/* Navigation */}
+                    <nav className="flex justify-between items-center p-6 max-w-7xl mx-auto">
+                        <motion.div 
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="flex items-center gap-3"
+                        >
+                            <IconWell size="md" className="text-neu-accent">
+                                <Icon name="Wallet" size={24} />
+                            </IconWell>
+                            <span className="text-2xl font-extrabold font-display text-neu-fg tracking-tight">Expensa</span>
+                        </motion.div>
+                        
+                        <motion.div 
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="flex items-center gap-3"
+                        >
+                            <Button variant="ghost" onClick={() => onNavigate('login')}>
+                                Login
+                            </Button>
+                            <Button variant="primary" onClick={() => onNavigate('signup')}>
+                                Get Started
+                            </Button>
+                        </motion.div>
+                    </nav>
+                    
+                    {/* Hero Section */}
+                    <div className="max-w-7xl mx-auto px-6 pt-16 md:pt-24 pb-32">
+                        <div className="grid lg:grid-cols-2 gap-16 items-center">
+                            <motion.div 
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2 }}
+                            >
+                                <motion.div 
+                                    initial={{ scale: 0.9, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full shadow-neu-raised-sm text-neu-accent text-sm font-semibold mb-8"
+                                >
+                                    <Icon name="Sparkles" size={16} />
+                                    Smart Expense Tracking
+                                </motion.div>
+                                
+                                <h1 className="text-5xl md:text-7xl font-extrabold font-display mb-8 leading-tight tracking-tight text-neu-fg">
+                                    Master Your
+                                    <br />
+                                    <span className="text-neu-accent">Student Finances</span>
+                                </h1>
+                                
+                                <p className="text-xl text-neu-muted mb-12 max-w-lg leading-relaxed">
+                                    Track expenses, set budgets, get personalized food suggestions, and generate weekly reports. Built for Indian students.
+                                </p>
+                                
+                                <div className="flex flex-col sm:flex-row gap-4">
+                                    <Button variant="primary" className="text-lg px-8 py-4" onClick={() => onNavigate('signup')}>
+                                        Start Free Today
+                                        <Icon name="ArrowRight" size={20} />
+                                    </Button>
+                                    <Button variant="secondary" className="text-lg px-8 py-4" onClick={() => onNavigate('login')}>
+                                        I Have an Account
+                                    </Button>
+                                </div>
+                            </motion.div>
+                            
+                            {/* Decorative Neumorphic Element */}
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.4 }}
+                                className="hidden lg:flex justify-center"
+                            >
+                                <div className="relative">
+                                    {/* Outer Ring */}
+                                    <motion.div 
+                                        animate={{ rotate: 360 }}
+                                        transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+                                        className="w-80 h-80 rounded-full shadow-neu-raised flex items-center justify-center"
+                                    >
+                                        {/* Middle Ring */}
+                                        <motion.div 
+                                            animate={{ rotate: -360 }}
+                                            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                                            className="w-60 h-60 rounded-full shadow-neu-inset flex items-center justify-center"
+                                        >
+                                            {/* Inner Circle */}
+                                            <motion.div 
+                                                animate={{ y: [0, -10, 0] }}
+                                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                                                className="w-40 h-40 rounded-full shadow-neu-raised flex items-center justify-center"
+                                            >
+                                                <div className="text-neu-accent">
+                                                    <Icon name="Wallet" size={64} />
+                                                </div>
+                                            </motion.div>
+                                        </motion.div>
+                                    </motion.div>
+                                    
+                                    {/* Floating Elements */}
+                                    <motion.div 
+                                        animate={{ y: [0, -15, 0] }}
+                                        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                                        className="absolute -top-4 -right-4 w-16 h-16 rounded-2xl shadow-neu-raised flex items-center justify-center text-neu-accent"
+                                    >
+                                        <Icon name="TrendingUp" size={28} />
+                                    </motion.div>
+                                    <motion.div 
+                                        animate={{ y: [0, -12, 0] }}
+                                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                                        className="absolute -bottom-4 -left-4 w-14 h-14 rounded-2xl shadow-neu-raised flex items-center justify-center text-neu-accent-secondary"
+                                    >
+                                        <Icon name="PieChart" size={24} />
+                                    </motion.div>
+                                </div>
+                            </motion.div>
+                        </div>
+                        
+                        {/* Features */}
+                        <motion.div 
+                            initial={{ opacity: 0, y: 40 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.6 }}
+                            className="grid md:grid-cols-3 gap-8 mt-32"
+                        >
+                            {[
+                                { icon: 'TrendingUp', title: 'Smart Analytics', desc: 'Beautiful charts and insights to understand your spending patterns instantly.' },
+                                { icon: 'UtensilsCrossed', title: 'Food Suggestions', desc: 'Get daily meal recommendations based on your budget and preferences.' },
+                                { icon: 'FileText', title: 'PDF Reports', desc: 'Generate comprehensive weekly reports with detailed spending breakdowns.' }
+                            ].map((feature, i) => (
+                                <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.7 + i * 0.1 }}
+                                >
+                                    <Card className="h-full">
+                                        <IconWell size="lg" className="text-neu-accent mb-6">
+                                            <Icon name={feature.icon} size={28} />
+                                        </IconWell>
+                                        <h3 className="text-xl font-bold font-display mb-3 text-neu-fg">{feature.title}</h3>
+                                        <p className="text-neu-muted leading-relaxed">{feature.desc}</p>
+                                    </Card>
+                                </motion.div>
+                            ))}
+                        </motion.div>
+                        
+                        {/* Stats */}
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.9 }}
+                            className="grid grid-cols-3 gap-8 mt-24"
+                        >
+                            {[
+                                { value: '100%', label: 'Free Forever' },
+                                { value: '8+', label: 'Categories' },
+                                { value: 'Real-time', label: 'Cloud Sync' }
+                            ].map((stat, i) => (
+                                <Card key={i} className="text-center py-8">
+                                    <p className="text-3xl md:text-4xl font-extrabold font-display text-neu-accent mb-2">{stat.value}</p>
+                                    <p className="text-neu-muted font-medium">{stat.label}</p>
+                                </Card>
+                            ))}
+                        </motion.div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Auth Pages
+        const AuthPage = ({ type, onNavigate, onSuccess }) => {
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [name, setName] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [showForgotPassword, setShowForgotPassword] = useState(false);
+            const [resetEmail, setResetEmail] = useState('');
+            const [resetLoading, setResetLoading] = useState(false);
+            const { showToast } = useContext(AppContext);
+            
+            const handleForgotPassword = async (e) => {
+                e.preventDefault();
+                if (!resetEmail) {
+                    showToast('Please enter your email address', 'error');
+                    return;
+                }
+                setResetLoading(true);
+                try {
+                    await auth.sendPasswordResetEmail(resetEmail);
+                    showToast('Password reset link sent to your email!', 'success');
+                    setShowForgotPassword(false);
+                    setResetEmail('');
+                } catch (error) {
+                    if (error.code === 'auth/user-not-found') {
+                        showToast('No account found with this email', 'error');
+                    } else if (error.code === 'auth/invalid-email') {
+                        showToast('Please enter a valid email address', 'error');
+                    } else {
+                        showToast(error.message, 'error');
+                    }
+                }
+                setResetLoading(false);
+            };
+            
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                
+                try {
+                    if (type === 'signup') {
+                        const result = await auth.createUserWithEmailAndPassword(email, password);
+                        await result.user.updateProfile({ displayName: name });
+                        await db.collection('users').doc(result.user.uid).set({
+                            email, displayName: name,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            isAdmin: email === 'palerugopi@gmail.com'
+                        });
+                        await db.collection('users').doc(result.user.uid).collection('settings').doc('preferences').set({
+                            dailyBudget: 500, weeklyBudget: 3500, monthlyBudget: 15000
+                        });
+                        showToast('Account created successfully!', 'success');
+                    } else {
+                        await auth.signInWithEmailAndPassword(email, password);
+                        showToast('Welcome back!', 'success');
+                    }
+                    onSuccess();
+                } catch (error) {
+                    showToast(error.message, 'error');
+                }
+                setLoading(false);
+            };
+            
+            const handleGoogleSignIn = async () => {
+                try {
+                    const provider = new firebase.auth.GoogleAuthProvider();
+                    const result = await auth.signInWithPopup(provider);
+                    const userDoc = await db.collection('users').doc(result.user.uid).get();
+                    
+                    if (!userDoc.exists) {
+                        await db.collection('users').doc(result.user.uid).set({
+                            email: result.user.email, displayName: result.user.displayName,
+                            photoURL: result.user.photoURL,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            isAdmin: result.user.email === 'palerugopi@gmail.com'
+                        });
+                        await db.collection('users').doc(result.user.uid).collection('settings').doc('preferences').set({
+                            dailyBudget: 500, weeklyBudget: 3500, monthlyBudget: 15000
+                        });
+                    }
+                    showToast('Welcome!', 'success');
+                    onSuccess();
+                } catch (error) {
+                    showToast(error.message, 'error');
+                }
+            };
+            
+            return (
+                <div className="min-h-screen flex items-center justify-center p-6">
+                    {/* Forgot Password Modal */}
+                    <AnimatePresence>
+                        {showForgotPassword && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="fixed inset-0 z-50 flex items-center justify-center p-6"
+                            >
+                                {/* Backdrop */}
+                                <motion.div 
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="absolute inset-0 bg-neu-fg/20 backdrop-blur-sm"
+                                    onClick={() => setShowForgotPassword(false)}
+                                />
+                                
+                                {/* Modal */}
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                    className="relative w-full max-w-sm bg-neu-base rounded-neu p-8 shadow-neu-raised z-10"
+                                >
+                                    <button
+                                        onClick={() => setShowForgotPassword(false)}
+                                        className="absolute top-4 right-4 p-2 rounded-full shadow-neu-raised-sm hover:shadow-neu-inset transition-all duration-300 text-neu-muted hover:text-neu-fg"
+                                    >
+                                        <Icon name="X" size={20} />
+                                    </button>
+                                    
+                                    <div className="text-center mb-6">
+                                        <IconWell size="lg" className="mx-auto mb-4 text-neu-accent">
+                                            <Icon name="KeyRound" size={28} />
+                                        </IconWell>
+                                        <h2 className="text-xl font-bold font-display text-neu-fg">Reset Password</h2>
+                                        <p className="text-neu-muted text-sm mt-2">Enter your email address and we'll send you a link to reset your password.</p>
+                                    </div>
+                                    
+                                    <form onSubmit={handleForgotPassword} className="space-y-5">
+                                        <Input
+                                            label="Email Address"
+                                            icon="Mail"
+                                            type="email"
+                                            placeholder="you@example.com"
+                                            value={resetEmail}
+                                            onChange={(e) => setResetEmail(e.target.value)}
+                                            required
+                                        />
+                                        <Button type="submit" variant="primary" className="w-full" disabled={resetLoading}>
+                                            {resetLoading ? (
+                                                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
+                                                    <Icon name="Loader2" size={20} />
+                                                </motion.div>
+                                            ) : (
+                                                <>
+                                                    <Icon name="Send" size={18} />
+                                                    Send Reset Link
+                                                </>
+                                            )}
+                                        </Button>
+                                    </form>
+                                    
+                                    <p className="text-center mt-6 text-neu-muted text-sm">
+                                        Remember your password?{' '}
+                                        <button 
+                                            onClick={() => setShowForgotPassword(false)} 
+                                            className="text-neu-accent font-semibold hover:underline"
+                                        >
+                                            Back to Login
+                                        </button>
+                                    </p>
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                    
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="w-full max-w-md"
+                    >
+                        <Card className="p-8 md:p-10">
+                            <button onClick={() => onNavigate('landing')} className="flex items-center gap-2 text-neu-muted hover:text-neu-fg mb-8 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-neu-accent rounded-lg p-1">
+                                <Icon name="ArrowLeft" size={20} />
+                                <span className="font-medium">Back to home</span>
+                            </button>
+                            
+                            <div className="text-center mb-10">
+                                <IconWell size="lg" className="mx-auto mb-6 text-neu-accent">
+                                    <Icon name="Wallet" size={32} />
+                                </IconWell>
+                                <h1 className="text-3xl font-extrabold font-display mb-2 text-neu-fg tracking-tight">
+                                    {type === 'signup' ? 'Create Account' : 'Welcome Back'}
+                                </h1>
+                                <p className="text-neu-muted">
+                                    {type === 'signup' ? 'Start tracking your expenses today' : 'Sign in to continue to Expensa'}
+                                </p>
+                            </div>
+                            
+                            <form onSubmit={handleSubmit} className="space-y-5">
+                                {type === 'signup' && (
+                                    <Input
+                                        label="Full Name"
+                                        icon="User"
+                                        type="text"
+                                        placeholder="John Doe"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        required
+                                    />
+                                )}
+                                <Input
+                                    label="Email Address"
+                                    icon="Mail"
+                                    type="email"
+                                    placeholder="you@example.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                                <Input
+                                    label="Password"
+                                    icon="Lock"
+                                    type="password"
+                                    placeholder="Enter your password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    minLength={6}
+                                />
+                                
+                                {type === 'login' && (
+                                    <div className="text-right">
+                                        <button 
+                                            type="button"
+                                            onClick={() => {
+                                                setResetEmail(email);
+                                                setShowForgotPassword(true);
+                                            }} 
+                                            className="text-sm text-neu-accent font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-neu-accent rounded"
+                                        >
+                                            Forgot Password?
+                                        </button>
+                                    </div>
+                                )}
+                                
+                                <Button type="submit" variant="primary" className="w-full mt-6" disabled={loading}>
+                                    {loading ? (
+                                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
+                                            <Icon name="Loader2" size={20} />
+                                        </motion.div>
+                                    ) : (type === 'signup' ? 'Create Account' : 'Sign In')}
+                                </Button>
+                            </form>
+                            
+                            <div className="relative my-8">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full h-px bg-gradient-to-r from-transparent via-neu-muted/30 to-transparent"></div>
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="px-4 bg-neu-base text-neu-muted font-medium">or continue with</span>
+                                </div>
+                            </div>
+                            
+                            <Button variant="secondary" className="w-full" onClick={handleGoogleSignIn}>
+                                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                                </svg>
+                                Continue with Google
+                            </Button>
+                            
+                            <p className="text-center mt-8 text-neu-muted">
+                                {type === 'signup' ? 'Already have an account?' : "Don't have an account?"}{' '}
+                                <button 
+                                    onClick={() => onNavigate(type === 'signup' ? 'login' : 'signup')} 
+                                    className="text-neu-accent font-semibold hover:underline focus:outline-none focus:ring-2 focus:ring-neu-accent rounded"
+                                >
+                                    {type === 'signup' ? 'Sign In' : 'Create Account'}
+                                </button>
+                            </p>
+                        </Card>
+                    </motion.div>
+                </div>
+            );
+        };
+
+        // Dashboard
+        const Dashboard = ({ user, expenses, settings, onNavigate }) => {
+            const todayTotal = expenses.filter(e => e.date === getToday()).reduce((sum, e) => sum + parseFloat(e.amount), 0);
+            const weekTotal = (() => {
+                const today = new Date();
+                const weekStart = new Date(today);
+                weekStart.setDate(today.getDate() - today.getDay());
+                return expenses.filter(e => new Date(e.date) >= weekStart).reduce((sum, e) => sum + parseFloat(e.amount), 0);
+            })();
+            const monthTotal = (() => {
+                const today = new Date();
+                const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                return expenses.filter(e => new Date(e.date) >= monthStart).reduce((sum, e) => sum + parseFloat(e.amount), 0);
+            })();
+            
+            const dailyPercentage = Math.min((todayTotal / settings.dailyBudget) * 100, 100);
+            const remaining = Math.max(settings.dailyBudget - todayTotal, 0);
+            
+            const getStatus = (percentage) => {
+                if (percentage < 50) return { color: '#38B2AC', text: 'On Track' };
+                if (percentage < 80) return { color: '#F59E0B', text: 'Watch Out' };
+                return { color: '#EF4444', text: 'Over Budget' };
+            };
+            
+            const status = getStatus(dailyPercentage);
+            const greeting = new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 18 ? 'Good Afternoon' : 'Good Evening';
+            
+            const categoryTotals = {};
+            expenses.forEach(e => {
+                if (!categoryTotals[e.category]) categoryTotals[e.category] = 0;
+                categoryTotals[e.category] += parseFloat(e.amount);
+            });
+            
+            const expensesByDate = {};
+            expenses.forEach(e => {
+                if (!expensesByDate[e.date]) expensesByDate[e.date] = [];
+                expensesByDate[e.date].push(e);
+            });
+            
+            // Chart
+            const chartRef = useRef(null);
+            const chartInstance = useRef(null);
+            
+            useEffect(() => {
+                if (chartRef.current && Object.keys(categoryTotals).length > 0) {
+                    if (chartInstance.current) chartInstance.current.destroy();
+                    
+                    const ctx = chartRef.current.getContext('2d');
+                    const labels = Object.keys(categoryTotals).map(id => categories.find(c => c.id === id)?.name || 'Other');
+                    const data = Object.values(categoryTotals);
+                    const colors = Object.keys(categoryTotals).map(id => categories.find(c => c.id === id)?.color || '#6B7280');
+                    
+                    chartInstance.current = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels,
+                            datasets: [{ data, backgroundColor: colors, borderWidth: 0, borderRadius: 4 }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: '70%',
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { color: '#6B7280', padding: 16, font: { size: 12, family: 'DM Sans' }, usePointStyle: true, pointStyle: 'circle' }
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                return () => { if (chartInstance.current) chartInstance.current.destroy(); };
+            }, [categoryTotals]);
+            
+            return (
+                <div className="pb-24 md:pb-8">
+                    {/* Header */}
+                    <div className="p-6 flex justify-between items-center">
+                        <div>
+                            <p className="text-neu-muted mb-1 font-medium">{greeting}</p>
+                            <h1 className="text-2xl font-bold font-display text-neu-fg tracking-tight">{user?.displayName || 'Student'}</h1>
+                        </div>
+                        {user?.photoURL ? (
+                            <div className="w-14 h-14 rounded-full shadow-neu-raised p-1">
+                                <img src={user.photoURL} className="w-full h-full rounded-full object-cover" alt="" />
+                            </div>
+                        ) : (
+                            <IconWell size="lg" className="text-neu-accent font-bold font-display text-lg">
+                                {user?.displayName?.charAt(0) || 'U'}
+                            </IconWell>
+                        )}
+                    </div>
+                    
+                    <div className="px-6 space-y-6">
+                        {/* Today's Progress Card */}
+                        <Card className="p-8">
+                            <div className="flex flex-col md:flex-row items-center gap-8">
+                                <ProgressRing percentage={dailyPercentage} color={status.color} />
+                                <div className="flex-1 text-center md:text-left">
+                                    <p className="text-neu-muted mb-2 font-medium">Today's Spending</p>
+                                    <h2 className="text-4xl font-extrabold font-display text-neu-fg tracking-tight mb-3">{formatCurrency(todayTotal)}</h2>
+                                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full shadow-neu-inset-sm">
+                                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: status.color }}></div>
+                                        <span className="font-semibold text-sm" style={{ color: status.color }}>{status.text}</span>
+                                    </div>
+                                    <p className="text-neu-muted mt-4">
+                                        <span className="font-bold text-neu-fg">{formatCurrency(remaining)}</span> remaining from {formatCurrency(settings.dailyBudget)} budget
+                                    </p>
+                                </div>
+                            </div>
+                        </Card>
+                        
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <Card>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <IconWell size="sm" className="text-neu-accent">
+                                        <Icon name="Calendar" size={18} />
+                                    </IconWell>
+                                    <span className="text-neu-muted text-sm font-medium">This Week</span>
+                                </div>
+                                <h3 className="text-2xl font-bold font-display text-neu-fg tracking-tight">{formatCurrency(weekTotal)}</h3>
+                                <div className="mt-4 h-2 rounded-full shadow-neu-inset-sm overflow-hidden">
+                                    <motion.div 
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${Math.min((weekTotal / settings.weeklyBudget) * 100, 100)}%` }}
+                                        transition={{ duration: 1, ease: "easeOut" }}
+                                        className="h-full rounded-full bg-neu-accent"
+                                    />
+                                </div>
+                            </Card>
+                            <Card>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <IconWell size="sm" className="text-neu-accent-secondary">
+                                        <Icon name="TrendingUp" size={18} />
+                                    </IconWell>
+                                    <span className="text-neu-muted text-sm font-medium">This Month</span>
+                                </div>
+                                <h3 className="text-2xl font-bold font-display text-neu-fg tracking-tight">{formatCurrency(monthTotal)}</h3>
+                                <div className="mt-4 h-2 rounded-full shadow-neu-inset-sm overflow-hidden">
+                                    <motion.div 
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${Math.min((monthTotal / settings.monthlyBudget) * 100, 100)}%` }}
+                                        transition={{ duration: 1, ease: "easeOut" }}
+                                        className="h-full rounded-full bg-neu-accent-secondary"
+                                    />
+                                </div>
+                            </Card>
+                        </div>
+                        
+                        {/* Budget Suggestions */}
+                        <Card>
+                            <div className="flex items-center gap-3 mb-6">
+                                <IconWell size="sm" className="text-neu-accent">
+                                    <Icon name="Target" size={18} />
+                                </IconWell>
+                                <h3 className="text-lg font-bold font-display text-neu-fg">Today's Budget Allocation</h3>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                {[
+                                    { name: 'Food', percent: 0.5, color: '#38B2AC' },
+                                    { name: 'Transport', percent: 0.2, color: '#6C63FF' },
+                                    { name: 'Shopping', percent: 0.2, color: '#F59E0B' },
+                                    { name: 'Others', percent: 0.1, color: '#EC4899' }
+                                ].map((item, i) => (
+                                    <motion.div 
+                                        key={i}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: i * 0.1 }}
+                                        className="p-4 rounded-neu-sm shadow-neu-inset"
+                                    >
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }}></div>
+                                            <p className="text-neu-muted text-sm font-medium">{item.name}</p>
+                                        </div>
+                                        <p className="text-lg font-bold font-display" style={{ color: item.color }}>
+                                            {formatCurrency(Math.max(remaining * item.percent, 0))}
+                                        </p>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </Card>
+                        
+                        {/* Category Chart */}
+                        {Object.keys(categoryTotals).length > 0 && (
+                            <Card>
+                                <h3 className="text-lg font-bold font-display mb-6 text-neu-fg">Spending by Category</h3>
+                                <div className="h-64">
+                                    <canvas ref={chartRef}></canvas>
+                                </div>
+                            </Card>
+                        )}
+                        
+                        {/* Recent Expenses */}
+                        <Card>
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-lg font-bold font-display text-neu-fg">Recent Expenses</h3>
+                                <button onClick={() => onNavigate('history')} className="text-neu-accent font-semibold hover:underline flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-neu-accent rounded-lg p-1">
+                                    View All <Icon name="ArrowRight" size={16} />
+                                </button>
+                            </div>
+                            <div className="space-y-3">
+                                {Object.entries(expensesByDate).slice(0, 2).map(([date, exps]) => (
+                                    <div key={date} className="mb-5">
+                                        <div className="flex justify-between items-center mb-4 pb-3">
+                                            <p className="text-neu-muted text-sm font-medium">{formatDate(date)}</p>
+                                            <p className="text-neu-accent-secondary font-bold">{formatCurrency(exps.reduce((s, e) => s + parseFloat(e.amount), 0))}</p>
+                                        </div>
+                                        {exps.slice(0, 3).map(expense => {
+                                            const cat = categories.find(c => c.id === expense.category);
+                                            return (
+                                                <motion.div 
+                                                    key={expense.id}
+                                                    initial={{ opacity: 0, x: -20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    className="flex items-center justify-between p-4 rounded-neu-sm shadow-neu-inset mb-3"
+                                                >
+                                                    <div className="flex items-center gap-4">
+                                                        <IconWell size="md" style={{ color: cat?.color }}>
+                                                            <Icon name={cat?.icon || 'Plus'} size={20} />
+                                                        </IconWell>
+                                                        <div>
+                                                            <p className="font-semibold text-neu-fg">{expense.itemName}</p>
+                                                            <p className="text-neu-muted text-sm">{cat?.name || expense.customCategoryName}</p>
+                                                        </div>
+                                                    </div>
+                                                    <p className="font-bold text-neu-fg">{formatCurrency(expense.amount)}</p>
+                                                </motion.div>
+                                            );
+                                        })}
+                                    </div>
+                                ))}
+                                {Object.keys(expensesByDate).length === 0 && (
+                                    <div className="text-center py-12">
+                                        <IconWell size="lg" className="mx-auto mb-4 text-neu-muted">
+                                            <Icon name="Wallet" size={32} />
+                                        </IconWell>
+                                        <p className="text-neu-muted font-medium">No expenses recorded yet</p>
+                                    </div>
+                                )}
+                            </div>
+                        </Card>
+                    </div>
+                    
+                    {/* FAB */}
+                    <motion.button
+                        whileHover={{ scale: 1.05, y: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => onNavigate('add')}
+                        className="fixed bottom-24 md:bottom-8 right-6 w-16 h-16 bg-neu-accent rounded-full shadow-[5px_5px_10px_rgb(163,177,198,0.6),-5px_-5px_10px_rgba(255,255,255,0.5)] flex items-center justify-center z-40 text-white hover:shadow-[7px_7px_14px_rgb(163,177,198,0.7),-7px_-7px_14px_rgba(255,255,255,0.6)] transition-shadow duration-300 focus:outline-none focus:ring-2 focus:ring-neu-accent focus:ring-offset-4 focus:ring-offset-neu-base"
+                    >
+                        <Icon name="Plus" size={28} />
+                    </motion.button>
+                </div>
+            );
+        };
+
+        // Add Expense Page
+        const AddExpensePage = ({ onNavigate, onAdd }) => {
+            const [category, setCategory] = useState('');
+            const [customName, setCustomName] = useState('');
+            const [itemName, setItemName] = useState('');
+            const [amount, setAmount] = useState('');
+            const [date, setDate] = useState(getToday());
+            const [notes, setNotes] = useState('');
+            const [loading, setLoading] = useState(false);
+            const { showToast } = useContext(AppContext);
+            
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                if (!category) {
+                    showToast('Please select a category', 'error');
+                    return;
+                }
+                setLoading(true);
+                
+                try {
+                    await onAdd({
+                        category,
+                        customCategoryName: category === 'custom' ? customName : null,
+                        itemName,
+                        amount: parseFloat(amount),
+                        date,
+                        notes
+                    });
+                    showToast('Expense added successfully!', 'success');
+                    onNavigate('dashboard');
+                } catch (error) {
+                    showToast(error.message, 'error');
+                }
+                setLoading(false);
+            };
+            
+            return (
+                <div className="min-h-screen pb-24 md:pb-8">
+                    <div className="p-6">
+                        <div className="flex items-center gap-4 mb-8">
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => onNavigate('dashboard')}
+                                className="p-3 rounded-neu-sm shadow-neu-raised hover:shadow-neu-raised-hover transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-neu-accent"
+                            >
+                                <Icon name="ArrowLeft" size={22} className="text-neu-fg" />
+                            </motion.button>
+                            <h1 className="text-2xl font-bold font-display text-neu-fg tracking-tight">Add Expense</h1>
+                        </div>
+                        
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            {/* Categories */}
+                            <Card>
+                                <label className="block text-lg font-bold font-display mb-5 text-neu-fg">Select Category</label>
+                                <div className="grid grid-cols-4 gap-3">
+                                    {categories.map((cat, i) => (
+                                        <motion.button
+                                            key={cat.id}
+                                            type="button"
+                                            initial={{ opacity: 0, scale: 0.9 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ delay: i * 0.05 }}
+                                            whileHover={{ scale: 1.03, y: -2 }}
+                                            whileTap={{ scale: 0.97 }}
+                                            onClick={() => setCategory(cat.id)}
+                                            className={`p-4 rounded-neu-sm flex flex-col items-center gap-2 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-neu-accent ${
+                                                category === cat.id 
+                                                    ? 'shadow-neu-inset-deep' 
+                                                    : 'shadow-neu-raised hover:shadow-neu-raised-hover'
+                                            }`}
+                                        >
+                                            <span style={{ color: cat.color }}><Icon name={cat.icon} size={24} /></span>
+                                            <span className="text-xs font-medium text-neu-muted text-center">{cat.name}</span>
+                                        </motion.button>
+                                    ))}
+                                </div>
+                            </Card>
+                            
+                            {category === 'custom' && (
+                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                                    <Card>
+                                        <Input
+                                            label="Custom Category Name"
+                                            placeholder="Enter category name"
+                                            value={customName}
+                                            onChange={(e) => setCustomName(e.target.value)}
+                                            required
+                                        />
+                                    </Card>
+                                </motion.div>
+                            )}
+                            
+                            <Card>
+                                <div className="space-y-5">
+                                    <Input
+                                        label="Item Name"
+                                        icon="ShoppingBag"
+                                        placeholder="What did you spend on?"
+                                        value={itemName}
+                                        onChange={(e) => setItemName(e.target.value)}
+                                        required
+                                    />
+                                    
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-neu-muted">Amount</label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neu-muted text-lg font-semibold">₹</span>
+                                            <input
+                                                type="number"
+                                                placeholder="0.00"
+                                                value={amount}
+                                                onChange={(e) => setAmount(e.target.value)}
+                                                required
+                                                min="1"
+                                                step="0.01"
+                                                className="w-full pl-10 pr-4 py-3.5 bg-neu-base shadow-neu-inset rounded-neu-sm text-neu-fg placeholder-neu-placeholder focus:outline-none focus:shadow-neu-inset-deep focus:ring-2 focus:ring-neu-accent focus:ring-offset-2 focus:ring-offset-neu-base transition-all duration-300 text-lg font-semibold"
+                                            />
+                                        </div>
+                                    </div>
+                                    
+                                    <Input
+                                        label="Date"
+                                        icon="Calendar"
+                                        type="date"
+                                        value={date}
+                                        onChange={(e) => setDate(e.target.value)}
+                                        required
+                                    />
+                                    
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-neu-muted">Notes (Optional)</label>
+                                        <textarea
+                                            placeholder="Any additional details..."
+                                            value={notes}
+                                            onChange={(e) => setNotes(e.target.value)}
+                                            rows={3}
+                                            className="w-full px-4 py-3.5 bg-neu-base shadow-neu-inset rounded-neu-sm text-neu-fg placeholder-neu-placeholder focus:outline-none focus:shadow-neu-inset-deep focus:ring-2 focus:ring-neu-accent focus:ring-offset-2 focus:ring-offset-neu-base transition-all duration-300 resize-none"
+                                        />
+                                    </div>
+                                </div>
+                            </Card>
+                            
+                            <Button type="submit" variant="primary" className="w-full py-4 text-lg" disabled={loading}>
+                                {loading ? (
+                                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
+                                        <Icon name="Loader2" size={20} />
+                                    </motion.div>
+                                ) : 'Add Expense'}
+                            </Button>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        // History Page
+        const HistoryPage = ({ expenses, onDelete, onNavigate }) => {
+            const [search, setSearch] = useState('');
+            const [filterCategory, setFilterCategory] = useState('');
+            
+            const expensesByDate = {};
+            expenses
+                .filter(e => e.itemName.toLowerCase().includes(search.toLowerCase()))
+                .filter(e => !filterCategory || e.category === filterCategory)
+                .forEach(e => {
+                    if (!expensesByDate[e.date]) expensesByDate[e.date] = [];
+                    expensesByDate[e.date].push(e);
+                });
+            
+            const generatePDF = () => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const today = new Date();
+                
+                doc.setFontSize(28);
+                doc.setTextColor(108, 99, 255);
+                doc.text('Expensa', 20, 25);
+                
+                doc.setFontSize(14);
+                doc.setTextColor(107, 114, 128);
+                doc.text('Weekly Expense Report', 20, 35);
+                doc.text(`Generated: ${formatDateFull(today)}`, 20, 45);
+                
+                doc.setDrawColor(108, 99, 255);
+                doc.setLineWidth(0.5);
+                doc.line(20, 52, 190, 52);
+                
+                let y = 65;
+                Object.entries(expensesByDate).slice(0, 10).forEach(([date, exps]) => {
+                    doc.setFontSize(12);
+                    doc.setTextColor(61, 72, 82);
+                    doc.text(formatDate(date), 20, y);
+                    doc.text(formatCurrency(exps.reduce((s, e) => s + parseFloat(e.amount), 0)), 180, y, { align: 'right' });
+                    y += 10;
+                    
+                    exps.forEach(e => {
+                        doc.setFontSize(10);
+                        doc.setTextColor(107, 114, 128);
+                        doc.text(`  ${e.itemName}`, 25, y);
+                        doc.text(formatCurrency(e.amount), 180, y, { align: 'right' });
+                        y += 7;
+                    });
+                    y += 5;
+                });
+                
+                doc.save(`expensa-report-${today.toISOString().split('T')[0]}.pdf`);
+            };
+            
+            return (
+                <div className="min-h-screen pb-24 md:pb-8">
+                    <div className="p-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <h1 className="text-2xl font-bold font-display text-neu-fg tracking-tight">Expense History</h1>
+                            <Button variant="primary" onClick={generatePDF}>
+                                <Icon name="Download" size={18} />
+                                Export
+                            </Button>
+                        </div>
+                        
+                        {/* Search & Filter */}
+                        <Card className="mb-6">
+                            <div className="flex flex-col md:flex-row gap-4">
+                                <div className="flex-1 relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neu-muted">
+                                        <Icon name="Search" size={20} />
+                                    </span>
+                                    <input
+                                        type="text"
+                                        placeholder="Search expenses..."
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        className="w-full pl-12 pr-4 py-3.5 bg-neu-base shadow-neu-inset rounded-neu-sm text-neu-fg placeholder-neu-placeholder focus:outline-none focus:shadow-neu-inset-deep focus:ring-2 focus:ring-neu-accent focus:ring-offset-2 focus:ring-offset-neu-base transition-all duration-300"
+                                    />
+                                </div>
+                                <select
+                                    value={filterCategory}
+                                    onChange={(e) => setFilterCategory(e.target.value)}
+                                    className="px-4 py-3.5 bg-neu-base shadow-neu-inset rounded-neu-sm text-neu-fg focus:outline-none focus:shadow-neu-inset-deep focus:ring-2 focus:ring-neu-accent focus:ring-offset-2 focus:ring-offset-neu-base transition-all duration-300 cursor-pointer"
+                                >
+                                    <option value="">All Categories</option>
+                                    {categories.map(cat => (
+                                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </Card>
+                        
+                        {/* Expenses List */}
+                        <div className="space-y-4">
+                            {Object.entries(expensesByDate).length > 0 ? (
+                                Object.entries(expensesByDate).map(([date, exps], index) => (
+                                    <motion.div
+                                        key={date}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.05 }}
+                                    >
+                                        <Card>
+                                            <div className="flex justify-between items-center mb-5 pb-4">
+                                                <div className="flex items-center gap-3">
+                                                    <IconWell size="sm" className="text-neu-accent">
+                                                        <Icon name="Calendar" size={18} />
+                                                    </IconWell>
+                                                    <p className="font-bold text-neu-fg">{formatDateFull(date)}</p>
+                                                </div>
+                                                <p className="text-xl font-bold text-neu-accent-secondary">
+                                                    {formatCurrency(exps.reduce((s, e) => s + parseFloat(e.amount), 0))}
+                                                </p>
+                                            </div>
+                                            <div className="space-y-3">
+                                                {exps.map(expense => {
+                                                    const cat = categories.find(c => c.id === expense.category);
+                                                    return (
+                                                        <motion.div
+                                                            key={expense.id}
+                                                            layout
+                                                            className="flex items-center justify-between p-4 rounded-neu-sm shadow-neu-inset group"
+                                                        >
+                                                            <div className="flex items-center gap-4">
+                                                                <IconWell size="md" style={{ color: cat?.color }}>
+                                                                    <Icon name={cat?.icon || 'Plus'} size={20} />
+                                                                </IconWell>
+                                                                <div>
+                                                                    <p className="font-semibold text-neu-fg">{expense.itemName}</p>
+                                                                    <p className="text-neu-muted text-sm">{cat?.name || expense.customCategoryName}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-3">
+                                                                <p className="font-bold text-neu-fg">{formatCurrency(expense.amount)}</p>
+                                                                <motion.button
+                                                                    whileHover={{ scale: 1.1 }}
+                                                                    whileTap={{ scale: 0.9 }}
+                                                                    onClick={() => onDelete(expense.id)}
+                                                                    className="opacity-0 group-hover:opacity-100 p-2.5 rounded-full shadow-neu-raised-sm hover:shadow-neu-inset text-red-500 transition-all duration-300 focus:outline-none focus:opacity-100 focus:ring-2 focus:ring-red-500"
+                                                                >
+                                                                    <Icon name="Trash2" size={16} />
+                                                                </motion.button>
+                                                            </div>
+                                                        </motion.div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </Card>
+                                    </motion.div>
+                                ))
+                            ) : (
+                                <Card className="text-center py-16">
+                                    <IconWell size="lg" className="mx-auto mb-5 text-neu-muted">
+                                        <Icon name="Wallet" size={36} />
+                                    </IconWell>
+                                    <h3 className="text-xl font-bold font-display mb-2 text-neu-fg">No Expenses Yet</h3>
+                                    <p className="text-neu-muted mb-6">Start tracking your spending today</p>
+                                    <Button variant="primary" onClick={() => onNavigate('add')}>
+                                        Add Your First Expense
+                                    </Button>
+                                </Card>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Health Rating Component
+        const HealthRating = ({ rating, size = 'sm' }) => {
+            const sizes = { sm: 14, md: 16, lg: 18 };
+            const iconSize = sizes[size];
+            return (
+                <div className="flex items-center gap-0.5">
+                    {[1, 2, 3, 4, 5].map(i => (
+                        <span key={i} style={{ color: i <= rating ? '#38B2AC' : '#CBD5E1' }}>
+                            <Icon name="Heart" size={iconSize} />
+                        </span>
+                    ))}
+                </div>
+            );
+        };
+
+        // Food Suggestions Page
+        const FoodPage = ({ settings }) => {
+            const [budget, setBudget] = useState(Math.round(settings.dailyBudget * 0.5));
+            const [showHealthy, setShowHealthy] = useState(false);
+            
+            // Get smart meal combinations based on availability
+            const getSuggestions = (budgetAmount, healthyOnly = false) => {
+                const combinations = [];
+                
+                // Generate valid combinations: afternoon meal + night meal
+                for (let i = 0; i < afternoonMeals.length; i++) {
+                    for (let j = 0; j < nightMeals.length; j++) {
+                        const afternoonFood = afternoonMeals[i];
+                        const nightFood = nightMeals[j];
+                        const afternoonPrice = foodPrices[afternoonFood];
+                        const nightPrice = foodPrices[nightFood];
+                        const total = afternoonPrice + nightPrice;
+                        const avgHealth = (foodData[afternoonFood].health + foodData[nightFood].health) / 2;
+                        const totalCalories = foodData[afternoonFood].calories + foodData[nightFood].calories;
+                        
+                        if (total <= budgetAmount) {
+                            // If healthy filter is on, only include combos with avg health >= 4
+                            if (healthyOnly && avgHealth < 4) continue;
+                            
+                            combinations.push({
+                                afternoon: afternoonFood,
+                                afternoonPrice: afternoonPrice,
+                                afternoonHealth: foodData[afternoonFood].health,
+                                night: nightFood,
+                                nightPrice: nightPrice,
+                                nightHealth: foodData[nightFood].health,
+                                total,
+                                savings: budgetAmount - total,
+                                avgHealth,
+                                totalCalories
+                            });
+                        }
+                    }
+                }
+                
+                // Sort by health first if healthy mode, otherwise by savings
+                return combinations
+                    .filter(combo => combo.afternoon !== combo.night)
+                    .sort((a, b) => {
+                        if (healthyOnly) {
+                            if (b.avgHealth !== a.avgHealth) return b.avgHealth - a.avgHealth;
+                        }
+                        if (b.savings !== a.savings) return b.savings - a.savings;
+                        return a.total - b.total;
+                    })
+                    .slice(0, 6);
+            };
+            
+            const suggestions = getSuggestions(budget, showHealthy);
+            
+            // Categorize by availability
+            const afternoonOnlyMeals = ["Variety Rice", "Mix Rice", "Curd Rice", "Veg Meals", "Non Veg Meals"];
+            const nightOnlyMeals = ["Dosa"];
+            const anytimeMeals = ["Biriyani", "Chicken Rice", "Chapati", "Parotta"];
+            
+            return (
+                <div className="min-h-screen pb-24 md:pb-8">
+                    <div className="p-6">
+                        <h1 className="text-2xl font-bold font-display mb-6 text-neu-fg tracking-tight">Food Suggestions</h1>
+                        
+                        {/* Budget Input */}
+                        <Card className="mb-6">
+                            <label className="block text-lg font-bold font-display mb-4 text-neu-fg">Daily Food Budget</label>
+                            <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neu-muted text-lg font-semibold">₹</span>
+                                <input
+                                    type="number"
+                                    value={budget}
+                                    onChange={(e) => setBudget(parseInt(e.target.value) || 0)}
+                                    className="w-full pl-10 pr-4 py-3.5 bg-neu-base shadow-neu-inset rounded-neu-sm text-neu-fg text-lg font-semibold focus:outline-none focus:shadow-neu-inset-deep focus:ring-2 focus:ring-neu-accent focus:ring-offset-2 focus:ring-offset-neu-base transition-all duration-300"
+                                />
+                            </div>
+                            <div className="mt-4 flex gap-2 flex-wrap">
+                                {[100, 150, 200, 250].map(val => (
+                                    <motion.button
+                                        key={val}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => setBudget(val)}
+                                        className={`px-4 py-2 rounded-neu-xs text-sm font-semibold transition-all duration-300 ${
+                                            budget === val 
+                                                ? 'shadow-neu-inset text-neu-accent' 
+                                                : 'shadow-neu-raised-sm text-neu-muted hover:text-neu-fg'
+                                        }`}
+                                    >
+                                        ₹{val}
+                                    </motion.button>
+                                ))}
+                            </div>
+                        </Card>
+                        
+                        {/* Suggestions */}
+                        <Card className="mb-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-3">
+                                    <IconWell size="sm" className="text-neu-accent-secondary">
+                                        <Icon name="Sparkles" size={18} />
+                                    </IconWell>
+                                    <h3 className="text-lg font-bold font-display text-neu-fg">Best Meal Combinations</h3>
+                                </div>
+                                <motion.button
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setShowHealthy(!showHealthy)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
+                                        showHealthy 
+                                            ? 'shadow-neu-inset text-neu-accent-secondary' 
+                                            : 'shadow-neu-raised-sm text-neu-muted hover:text-neu-fg'
+                                    }`}
+                                >
+                                    <Icon name="Heart" size={16} />
+                                    Healthy
+                                </motion.button>
+                            </div>
+                            
+                            {suggestions.length > 0 ? (
+                                <div className="space-y-4">
+                                    {suggestions.map((combo, i) => (
+                                        <motion.div
+                                            key={i}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: i * 0.1 }}
+                                            whileHover={{ y: -2 }}
+                                            className="p-5 rounded-neu-sm shadow-neu-inset hover:shadow-neu-inset-deep transition-all duration-300"
+                                        >
+                                            <div className="flex justify-between items-center mb-4">
+                                                <div className="flex items-center gap-3">
+                                                    <span className="px-3 py-1.5 rounded-full shadow-neu-raised-sm text-neu-accent text-sm font-bold">
+                                                        Combo {i + 1}
+                                                    </span>
+                                                    <div className="flex items-center gap-1 px-2 py-1 rounded-full shadow-neu-inset-sm">
+                                                        <Icon name="Heart" size={12} className="text-neu-accent-secondary" />
+                                                        <span className="text-xs font-semibold text-neu-accent-secondary">{combo.avgHealth.toFixed(1)}/5</span>
+                                                    </div>
+                                                </div>
+                                                {combo.savings > 0 && (
+                                                    <span className="text-neu-accent-secondary font-bold flex items-center gap-1">
+                                                        <Icon name="TrendingDown" size={16} />
+                                                        Save {formatCurrency(combo.savings)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="p-4 rounded-neu-xs shadow-neu-raised-sm">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <Icon name="Sun" size={16} className="text-amber-500" />
+                                                            <p className="text-neu-muted text-sm font-medium">Afternoon</p>
+                                                        </div>
+                                                        <HealthRating rating={combo.afternoonHealth} size="sm" />
+                                                    </div>
+                                                    <p className="font-bold text-neu-fg">{combo.afternoon}</p>
+                                                    <p className="text-neu-accent-secondary font-semibold">{formatCurrency(combo.afternoonPrice)}</p>
+                                                    <p className="text-neu-muted text-xs mt-1">{foodData[combo.afternoon].calories} cal</p>
+                                                </div>
+                                                <div className="p-4 rounded-neu-xs shadow-neu-raised-sm">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <Icon name="Moon" size={16} className="text-indigo-400" />
+                                                            <p className="text-neu-muted text-sm font-medium">Night</p>
+                                                        </div>
+                                                        <HealthRating rating={combo.nightHealth} size="sm" />
+                                                    </div>
+                                                    <p className="font-bold text-neu-fg">{combo.night}</p>
+                                                    <p className="text-neu-accent font-semibold">{formatCurrency(combo.nightPrice)}</p>
+                                                    <p className="text-neu-muted text-xs mt-1">{foodData[combo.night].calories} cal</p>
+                                                </div>
+                                            </div>
+                                            <div className="mt-4 pt-4 border-t border-neu-muted/20 flex justify-between items-center">
+                                                <div>
+                                                    <span className="text-neu-muted font-medium">Total for Day</span>
+                                                    <p className="text-xs text-neu-muted">{combo.totalCalories} calories</p>
+                                                </div>
+                                                <span className="text-2xl font-extrabold font-display text-neu-fg">{formatCurrency(combo.total)}</span>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8">
+                                    <IconWell size="lg" className="mx-auto mb-4 text-amber-500">
+                                        <Icon name="AlertTriangle" size={28} />
+                                    </IconWell>
+                                    <p className="text-neu-muted font-medium">
+                                        {showHealthy ? 'No healthy combos in this budget' : 'Budget too low for 2 meals'}
+                                    </p>
+                                    <p className="text-neu-muted text-sm mt-1">
+                                        {showHealthy ? 'Try increasing budget or disable healthy filter' : 'Minimum ₹80 required for basic meals'}
+                                    </p>
+                                </div>
+                            )}
+                        </Card>
+                        
+                        {/* All Meal Options by Availability */}
+                        <Card className="mb-6">
+                            <h3 className="text-lg font-bold font-display mb-6 text-neu-fg">Meal Availability & Nutrition</h3>
+                            
+                            {/* Afternoon Only Meals */}
+                            <div className="mb-6">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Icon name="Sun" size={18} className="text-amber-500" />
+                                    <h4 className="font-semibold text-neu-fg">Afternoon Only</h4>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {afternoonOnlyMeals.map((name, i) => (
+                                        <motion.div
+                                            key={name}
+                                            initial={{ opacity: 0, scale: 0.9 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ delay: i * 0.03 }}
+                                            whileHover={{ scale: 1.02, y: -2 }}
+                                            className="p-4 rounded-neu-sm shadow-neu-raised hover:shadow-neu-raised-hover transition-all duration-300"
+                                        >
+                                            <div className="flex justify-between items-start mb-2">
+                                                <p className="font-semibold text-neu-fg">{name}</p>
+                                                <HealthRating rating={foodData[name].health} size="sm" />
+                                            </div>
+                                            <div className="flex justify-between items-center mb-2">
+                                                <p className="text-lg font-bold text-amber-500">{formatCurrency(foodPrices[name])}</p>
+                                                <span className="text-xs text-neu-muted">{foodData[name].calories} cal</span>
+                                            </div>
+                                            <p className="text-xs text-neu-muted leading-relaxed">{foodData[name].description}</p>
+                                            <div className="flex flex-wrap gap-1 mt-2">
+                                                {foodData[name].tags.map(tag => (
+                                                    <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-medium shadow-neu-inset-sm text-neu-muted">
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            {/* Afternoon & Night Meals */}
+                            <div className="mb-6">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Icon name="Clock" size={18} className="text-neu-accent" />
+                                    <h4 className="font-semibold text-neu-fg">Afternoon & Night</h4>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {anytimeMeals.map((name, i) => (
+                                        <motion.div
+                                            key={name}
+                                            initial={{ opacity: 0, scale: 0.9 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ delay: i * 0.03 }}
+                                            whileHover={{ scale: 1.02, y: -2 }}
+                                            className="p-4 rounded-neu-sm shadow-neu-raised hover:shadow-neu-raised-hover transition-all duration-300"
+                                        >
+                                            <div className="flex justify-between items-start mb-2">
+                                                <p className="font-semibold text-neu-fg">{name}</p>
+                                                <HealthRating rating={foodData[name].health} size="sm" />
+                                            </div>
+                                            <div className="flex justify-between items-center mb-2">
+                                                <p className="text-lg font-bold text-neu-accent">{formatCurrency(foodPrices[name])}</p>
+                                                <span className="text-xs text-neu-muted">{foodData[name].calories} cal</span>
+                                            </div>
+                                            <p className="text-xs text-neu-muted leading-relaxed">{foodData[name].description}</p>
+                                            <div className="flex flex-wrap gap-1 mt-2">
+                                                {foodData[name].tags.map(tag => (
+                                                    <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-medium shadow-neu-inset-sm text-neu-muted">
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            {/* Night Only Meals */}
+                            <div>
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Icon name="Moon" size={18} className="text-indigo-400" />
+                                    <h4 className="font-semibold text-neu-fg">Night Only</h4>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {nightOnlyMeals.map((name, i) => (
+                                        <motion.div
+                                            key={name}
+                                            initial={{ opacity: 0, scale: 0.9 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ delay: i * 0.03 }}
+                                            whileHover={{ scale: 1.02, y: -2 }}
+                                            className="p-4 rounded-neu-sm shadow-neu-raised hover:shadow-neu-raised-hover transition-all duration-300"
+                                        >
+                                            <div className="flex justify-between items-start mb-2">
+                                                <p className="font-semibold text-neu-fg">{name}</p>
+                                                <HealthRating rating={foodData[name].health} size="sm" />
+                                            </div>
+                                            <div className="flex justify-between items-center mb-2">
+                                                <p className="text-lg font-bold text-indigo-400">{formatCurrency(foodPrices[name])}</p>
+                                                <span className="text-xs text-neu-muted">{foodData[name].calories} cal</span>
+                                            </div>
+                                            <p className="text-xs text-neu-muted leading-relaxed">{foodData[name].description}</p>
+                                            <div className="flex flex-wrap gap-1 mt-2">
+                                                {foodData[name].tags.map(tag => (
+                                                    <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-medium shadow-neu-inset-sm text-neu-muted">
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            </div>
+                        </Card>
+                        
+                        {/* Healthy Eating Tips */}
+                        <Card className="mb-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <IconWell size="sm" className="text-neu-accent-secondary">
+                                    <Icon name="Heart" size={18} />
+                                </IconWell>
+                                <h3 className="text-lg font-bold font-display text-neu-fg">Healthy Eating Tips</h3>
+                            </div>
+                            <ul className="space-y-3">
+                                {[
+                                    { tip: "Veg Meals + Dosa combo (₹115) - Balanced nutrition with probiotics", icon: "Leaf" },
+                                    { tip: "Curd Rice is excellent for digestion and gut health", icon: "Smile" },
+                                    { tip: "Non Veg Meals (₹120) is the most nutritious - complete protein + vegetables", icon: "Award" },
+                                    { tip: "Avoid Parotta daily - high in refined flour and oil", icon: "AlertCircle" },
+                                    { tip: "Dosa is fermented - great for digestion and light on stomach at night", icon: "Moon" },
+                                    { tip: "Chapati is healthier than Parotta - made from whole wheat", icon: "Check" }
+                                ].map((item, i) => (
+                                    <motion.li 
+                                        key={i}
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.5 + i * 0.1 }}
+                                        className="flex items-start gap-3 text-neu-muted"
+                                    >
+                                        <span className="w-6 h-6 rounded-full shadow-neu-inset-sm flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <Icon name={item.icon} size={14} className="text-neu-accent-secondary" />
+                                        </span>
+                                        <span>{item.tip}</span>
+                                    </motion.li>
+                                ))}
+                            </ul>
+                        </Card>
+                        
+                        {/* Budget Tips */}
+                        <Card>
+                            <div className="flex items-center gap-3 mb-4">
+                                <IconWell size="sm" className="text-neu-accent">
+                                    <Icon name="Lightbulb" size={18} />
+                                </IconWell>
+                                <h3 className="text-lg font-bold font-display text-neu-fg">Money Saving Tips</h3>
+                            </div>
+                            <ul className="space-y-3">
+                                {[
+                                    { tip: "Curd Rice + Dosa combo = ₹80/day (cheapest & healthy!)", icon: "TrendingDown" },
+                                    { tip: "Variety Rice + Dosa combo = ₹80/day (budget friendly)", icon: "Coins" },
+                                    { tip: "Chapati + Dosa combo = ₹85/day (good balance)", icon: "Scale" },
+                                    { tip: "Save Biriyani & Non Veg Meals for weekends as treats", icon: "Calendar" },
+                                    { tip: "Veg Meals (₹75) offers best value - complete meal with dal & sabzi", icon: "Star" }
+                                ].map((item, i) => (
+                                    <motion.li 
+                                        key={i}
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.8 + i * 0.1 }}
+                                        className="flex items-start gap-3 text-neu-muted"
+                                    >
+                                        <span className="w-6 h-6 rounded-full shadow-neu-inset-sm flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <Icon name={item.icon} size={14} className="text-neu-accent" />
+                                        </span>
+                                        <span>{item.tip}</span>
+                                    </motion.li>
+                                ))}
+                            </ul>
+                        </Card>
+                    </div>
+                </div>
+            );
+        };
+
+        // Reports Page
+        const ReportsPage = ({ expenses, settings }) => {
+            const chartRef = useRef(null);
+            const chartInstance = useRef(null);
+            
+            const weekTotal = (() => {
+                const today = new Date();
+                const weekStart = new Date(today);
+                weekStart.setDate(today.getDate() - today.getDay());
+                return expenses.filter(e => new Date(e.date) >= weekStart).reduce((sum, e) => sum + parseFloat(e.amount), 0);
+            })();
+            
+            const monthTotal = (() => {
+                const today = new Date();
+                const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                return expenses.filter(e => new Date(e.date) >= monthStart).reduce((sum, e) => sum + parseFloat(e.amount), 0);
+            })();
+            
+            const categoryTotals = {};
+            expenses.forEach(e => {
+                if (!categoryTotals[e.category]) categoryTotals[e.category] = 0;
+                categoryTotals[e.category] += parseFloat(e.amount);
+            });
+            
+            useEffect(() => {
+                if (chartRef.current) {
+                    if (chartInstance.current) chartInstance.current.destroy();
+                    
+                    const ctx = chartRef.current.getContext('2d');
+                    const last7Days = [];
+                    const dailyTotals = [];
+                    
+                    for (let i = 6; i >= 0; i--) {
+                        const date = new Date();
+                        date.setDate(date.getDate() - i);
+                        const dateStr = date.toISOString().split('T')[0];
+                        last7Days.push(date.toLocaleDateString('en-IN', { weekday: 'short' }));
+                        dailyTotals.push(expenses.filter(e => e.date === dateStr).reduce((sum, e) => sum + parseFloat(e.amount), 0));
+                    }
+                    
+                    chartInstance.current = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: last7Days,
+                            datasets: [{
+                                data: dailyTotals,
+                                backgroundColor: '#6C63FF',
+                                borderRadius: 8,
+                                borderSkipped: false,
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true, grid: { color: 'rgba(107,114,128,0.1)' }, ticks: { color: '#6B7280', font: { family: 'DM Sans' } } },
+                                x: { grid: { display: false }, ticks: { color: '#6B7280', font: { family: 'DM Sans' } } }
+                            }
+                        }
+                    });
+                }
+                
+                return () => { if (chartInstance.current) chartInstance.current.destroy(); };
+            }, [expenses]);
+            
+            return (
+                <div className="min-h-screen pb-24 md:pb-8">
+                    <div className="p-6">
+                        <h1 className="text-2xl font-bold font-display mb-6 text-neu-fg tracking-tight">Reports & Analytics</h1>
+                        
+                        {/* Summary */}
+                        <div className="grid grid-cols-2 gap-4 mb-6">
+                            <Card>
+                                <p className="text-neu-muted text-sm mb-2 font-medium">Weekly Spending</p>
+                                <h3 className="text-2xl font-extrabold font-display text-neu-fg tracking-tight">{formatCurrency(weekTotal)}</h3>
+                                <p className="text-neu-muted text-sm mt-2">Budget: {formatCurrency(settings.weeklyBudget)}</p>
+                            </Card>
+                            <Card>
+                                <p className="text-neu-muted text-sm mb-2 font-medium">Monthly Spending</p>
+                                <h3 className="text-2xl font-extrabold font-display text-neu-fg tracking-tight">{formatCurrency(monthTotal)}</h3>
+                                <p className="text-neu-muted text-sm mt-2">Budget: {formatCurrency(settings.monthlyBudget)}</p>
+                            </Card>
+                        </div>
+                        
+                        {/* Weekly Chart */}
+                        <Card className="mb-6">
+                            <h3 className="text-lg font-bold font-display mb-6 text-neu-fg">Weekly Spending Trend</h3>
+                            <div className="h-56 p-4 rounded-neu-sm shadow-neu-inset">
+                                <canvas ref={chartRef}></canvas>
+                            </div>
+                        </Card>
+                        
+                        {/* Category Breakdown */}
+                        <Card>
+                            <h3 className="text-lg font-bold font-display mb-6 text-neu-fg">Category Breakdown</h3>
+                            <div className="space-y-5">
+                                {Object.entries(categoryTotals).length > 0 ? (
+                                    Object.entries(categoryTotals).map(([catId, total]) => {
+                                        const cat = categories.find(c => c.id === catId);
+                                        const percentage = monthTotal > 0 ? (total / monthTotal * 100).toFixed(1) : 0;
+                                        return (
+                                            <div key={catId} className="flex items-center gap-4">
+                                                <IconWell size="md" style={{ color: cat?.color }}>
+                                                    <Icon name={cat?.icon || 'Plus'} size={20} />
+                                                </IconWell>
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between mb-2">
+                                                        <span className="font-semibold text-neu-fg">{cat?.name || 'Other'}</span>
+                                                        <span className="font-bold text-neu-fg">{formatCurrency(total)}</span>
+                                                    </div>
+                                                    <div className="h-2.5 rounded-full shadow-neu-inset-sm overflow-hidden">
+                                                        <motion.div
+                                                            initial={{ width: 0 }}
+                                                            animate={{ width: `${percentage}%` }}
+                                                            transition={{ duration: 1, ease: "easeOut" }}
+                                                            className="h-full rounded-full"
+                                                            style={{ background: cat?.color }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <span className="text-neu-muted text-sm font-medium w-14 text-right">{percentage}%</span>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <p className="text-neu-muted text-center py-8 font-medium">No data available</p>
+                                )}
+                            </div>
+                        </Card>
+                    </div>
+                </div>
+            );
+        };
+
+        // Settings Page
+        const SettingsPage = ({ user, settings, onSaveSettings, onSignOut }) => {
+            const [dailyBudget, setDailyBudget] = useState(settings.dailyBudget);
+            const [weeklyBudget, setWeeklyBudget] = useState(settings.weeklyBudget);
+            const [monthlyBudget, setMonthlyBudget] = useState(settings.monthlyBudget);
+            const [loading, setLoading] = useState(false);
+            const { showToast } = useContext(AppContext);
+            
+            const handleSave = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                try {
+                    await onSaveSettings({ dailyBudget, weeklyBudget, monthlyBudget });
+                    showToast('Settings saved!', 'success');
+                } catch (error) {
+                    showToast(error.message, 'error');
+                }
+                setLoading(false);
+            };
+            
+            return (
+                <div className="min-h-screen pb-24 md:pb-8">
+                    <div className="p-6">
+                        <h1 className="text-2xl font-bold font-display mb-6 text-neu-fg tracking-tight">Settings</h1>
+                        
+                        {/* Profile */}
+                        <Card className="mb-6">
+                            <h3 className="text-lg font-bold font-display mb-5 text-neu-fg">Profile</h3>
+                            <div className="flex items-center gap-5">
+                                {user?.photoURL ? (
+                                    <div className="w-20 h-20 rounded-full shadow-neu-raised p-1.5">
+                                        <img src={user.photoURL} className="w-full h-full rounded-full object-cover" alt="" />
+                                    </div>
+                                ) : (
+                                    <IconWell size="lg" className="text-neu-accent font-bold font-display text-2xl w-20 h-20">
+                                        {user?.displayName?.charAt(0) || 'U'}
+                                    </IconWell>
+                                )}
+                                <div>
+                                    <p className="text-xl font-bold text-neu-fg">{user?.displayName || 'User'}</p>
+                                    <p className="text-neu-muted">{user?.email}</p>
+                                </div>
+                            </div>
+                        </Card>
+                        
+                        {/* Budget Settings */}
+                        <Card className="mb-6">
+                            <h3 className="text-lg font-bold font-display mb-5 text-neu-fg">Budget Settings</h3>
+                            <form onSubmit={handleSave} className="space-y-5">
+                                <Input
+                                    label="Daily Budget (₹)"
+                                    type="number"
+                                    value={dailyBudget}
+                                    onChange={(e) => setDailyBudget(parseInt(e.target.value) || 0)}
+                                />
+                                <Input
+                                    label="Weekly Budget (₹)"
+                                    type="number"
+                                    value={weeklyBudget}
+                                    onChange={(e) => setWeeklyBudget(parseInt(e.target.value) || 0)}
+                                />
+                                <Input
+                                    label="Monthly Budget (₹)"
+                                    type="number"
+                                    value={monthlyBudget}
+                                    onChange={(e) => setMonthlyBudget(parseInt(e.target.value) || 0)}
+                                />
+                                <Button type="submit" variant="primary" className="w-full" disabled={loading}>
+                                    {loading ? (
+                                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
+                                            <Icon name="Loader2" size={20} />
+                                        </motion.div>
+                                    ) : 'Save Settings'}
+                                </Button>
+                            </form>
+                        </Card>
+                        
+                        {/* Logout */}
+                        <motion.button
+                            whileHover={{ scale: 1.02, y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={onSignOut}
+                            className="w-full py-4 rounded-neu-sm shadow-neu-raised hover:shadow-neu-raised-hover text-red-500 font-bold flex items-center justify-center gap-3 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-neu-base"
+                        >
+                            <Icon name="LogOut" size={20} />
+                            Sign Out
+                        </motion.button>
+                    </div>
+                </div>
+            );
+        };
+
+        // Admin Page
+        const AdminPage = () => {
+            const [users, setUsers] = useState([]);
+            const [loading, setLoading] = useState(true);
+            
+            useEffect(() => {
+                const loadUsers = async () => {
+                    const snapshot = await db.collection('users').get();
+                    const usersData = await Promise.all(snapshot.docs.map(async doc => {
+                        const expensesSnap = await db.collection('users').doc(doc.id).collection('expenses').get();
+                        return { id: doc.id, ...doc.data(), expenseCount: expensesSnap.docs.length };
+                    }));
+                    setUsers(usersData);
+                    setLoading(false);
+                };
+                loadUsers();
+            }, []);
+            
+            return (
+                <div className="min-h-screen pb-24 md:pb-8">
+                    <div className="p-6">
+                        <h1 className="text-2xl font-bold font-display mb-6 text-neu-fg tracking-tight">Admin Dashboard</h1>
+                        
+                        {/* Stats */}
+                        <Card className="mb-6">
+                            <h3 className="text-lg font-bold font-display mb-5 text-neu-fg">Platform Overview</h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-6 rounded-neu-sm shadow-neu-inset text-center">
+                                    <p className="text-neu-muted text-sm mb-2 font-medium">Total Users</p>
+                                    <p className="text-4xl font-extrabold font-display text-neu-accent">{users.length}</p>
+                                </div>
+                                <div className="p-6 rounded-neu-sm shadow-neu-inset text-center">
+                                    <p className="text-neu-muted text-sm mb-2 font-medium">Total Expenses</p>
+                                    <p className="text-4xl font-extrabold font-display text-neu-accent-secondary">
+                                        {users.reduce((sum, u) => sum + u.expenseCount, 0)}
+                                    </p>
+                                </div>
+                            </div>
+                        </Card>
+                        
+                        {/* User List */}
+                        <Card>
+                            <h3 className="text-lg font-bold font-display mb-5 text-neu-fg">All Users</h3>
+                            {loading ? (
+                                <div className="space-y-3">
+                                    {[1, 2, 3].map(i => (
+                                        <div key={i} className="p-5 rounded-neu-sm shadow-neu-inset animate-pulse h-20" />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {users.map((user, index) => (
+                                        <motion.div
+                                            key={user.id}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: index * 0.05 }}
+                                            className="p-5 rounded-neu-sm shadow-neu-inset flex items-center justify-between"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <IconWell size="md" className="text-neu-accent font-bold font-display">
+                                                    {user.displayName?.charAt(0) || 'U'}
+                                                </IconWell>
+                                                <div>
+                                                    <p className="font-bold text-neu-fg">{user.displayName || 'User'}</p>
+                                                    <p className="text-neu-muted text-sm">{user.email}</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-2xl font-extrabold font-display text-neu-accent">{user.expenseCount}</p>
+                                                <p className="text-neu-muted text-sm">expenses</p>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            )}
+                        </Card>
+                    </div>
+                </div>
+            );
+        };
+
+        // Navigation
+        const BottomNav = ({ currentPage, onNavigate, isAdmin }) => {
+            const navItems = [
+                { id: 'dashboard', icon: 'Home', label: 'Home' },
+                { id: 'history', icon: 'Clock', label: 'History' },
+                { id: 'food', icon: 'UtensilsCrossed', label: 'Food' },
+                { id: 'reports', icon: 'BarChart3', label: 'Reports' },
+                { id: 'settings', icon: 'Settings', label: 'Settings' }
+            ];
+            
+            if (isAdmin) {
+                navItems.push({ id: 'admin', icon: 'Shield', label: 'Admin' });
+            }
+            
+            return (
+                <nav className="fixed bottom-0 left-0 right-0 md:top-0 md:bottom-auto bg-neu-base shadow-neu-raised md:shadow-[0_9px_16px_rgb(163,177,198,0.3)] z-50">
+                    <div className="max-w-lg mx-auto flex justify-around py-3">
+                        {navItems.map(item => (
+                            <motion.button
+                                key={item.id}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => onNavigate(item.id)}
+                                className={`flex flex-col items-center py-2 px-3 rounded-neu-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-neu-accent ${
+                                    currentPage === item.id 
+                                        ? 'shadow-neu-inset text-neu-accent' 
+                                        : 'text-neu-muted hover:text-neu-fg hover:shadow-neu-raised-sm'
+                                }`}
+                            >
+                                <Icon name={item.icon} size={22} />
+                                <span className="text-xs mt-1 font-medium">{item.label}</span>
+                            </motion.button>
+                        ))}
+                    </div>
+                </nav>
+            );
+        };
+
+        // Main App
+        const App = () => {
+            const [user, setUser] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [currentPage, setCurrentPage] = useState('landing');
+            const [expenses, setExpenses] = useState([]);
+            const [settings, setSettings] = useState({ dailyBudget: 500, weeklyBudget: 3500, monthlyBudget: 15000 });
+            const [isAdmin, setIsAdmin] = useState(false);
+            const [toast, setToast] = useState(null);
+            
+            const showToast = (message, type = 'success') => {
+                setToast({ message, type });
+                setTimeout(() => setToast(null), 3000);
+            };
+            
+            useEffect(() => {
+                const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+                    setUser(firebaseUser);
+                    setLoading(false);
+                    
+                    if (firebaseUser) {
+                        setCurrentPage('dashboard');
+                        
+                        const userDoc = await db.collection('users').doc(firebaseUser.uid).get();
+                        if (userDoc.exists) {
+                            setIsAdmin(userDoc.data().isAdmin || firebaseUser.email === 'palerugopi@gmail.com');
+                        }
+                        
+                        const settingsDoc = await db.collection('users').doc(firebaseUser.uid).collection('settings').doc('preferences').get();
+                        if (settingsDoc.exists) {
+                            setSettings(s => ({ ...s, ...settingsDoc.data() }));
+                        }
+                        
+                        const expensesSnap = await db.collection('users').doc(firebaseUser.uid).collection('expenses').orderBy('date', 'desc').get();
+                        setExpenses(expensesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+                    } else {
+                        setCurrentPage('landing');
+                    }
+                });
+                
+                return () => unsubscribe();
+            }, []);
+            
+            const handleAddExpense = async (expense) => {
+                await db.collection('users').doc(user.uid).collection('expenses').add({
+                    ...expense,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                const expensesSnap = await db.collection('users').doc(user.uid).collection('expenses').orderBy('date', 'desc').get();
+                setExpenses(expensesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            };
+            
+            const handleDeleteExpense = async (expenseId) => {
+                await db.collection('users').doc(user.uid).collection('expenses').doc(expenseId).delete();
+                setExpenses(expenses.filter(e => e.id !== expenseId));
+                showToast('Expense deleted', 'success');
+            };
+            
+            const handleSaveSettings = async (newSettings) => {
+                await db.collection('users').doc(user.uid).collection('settings').doc('preferences').set(newSettings, { merge: true });
+                setSettings(s => ({ ...s, ...newSettings }));
+            };
+            
+            const handleSignOut = async () => {
+                await auth.signOut();
+                setUser(null);
+                setExpenses([]);
+                setCurrentPage('landing');
+                showToast('Signed out successfully');
+            };
+            
+            if (loading) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center bg-neu-base">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="text-center"
+                        >
+                            <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                            >
+                                <IconWell size="lg" className="mx-auto mb-6 text-neu-accent">
+                                    <Icon name="Wallet" size={36} />
+                                </IconWell>
+                            </motion.div>
+                            <h1 className="text-2xl font-extrabold font-display text-neu-accent mb-2 tracking-tight">Expensa</h1>
+                            <p className="text-neu-muted font-medium">Loading...</p>
+                        </motion.div>
+                    </div>
+                );
+            }
+            
+            return (
+                <AppContext.Provider value={{ showToast }}>
+                    <div className="min-h-screen bg-neu-base text-neu-fg">
+                        <AnimatePresence mode="wait">
+                            {toast && <Toast {...toast} onClose={() => setToast(null)} />}
+                        </AnimatePresence>
+                        
+                        <AnimatePresence mode="wait">
+                            {!user ? (
+                                <motion.div key={currentPage} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                    {currentPage === 'landing' && <LandingPage onNavigate={setCurrentPage} />}
+                                    {currentPage === 'login' && <AuthPage type="login" onNavigate={setCurrentPage} onSuccess={() => {}} />}
+                                    {currentPage === 'signup' && <AuthPage type="signup" onNavigate={setCurrentPage} onSuccess={() => {}} />}
+                                </motion.div>
+                            ) : (
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                                    <BottomNav currentPage={currentPage} onNavigate={setCurrentPage} isAdmin={isAdmin} />
+                                    <div className="md:pt-20">
+                                        <AnimatePresence mode="wait">
+                                            <motion.div key={currentPage} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }}>
+                                                {currentPage === 'dashboard' && <Dashboard user={user} expenses={expenses} settings={settings} onNavigate={setCurrentPage} />}
+                                                {currentPage === 'add' && <AddExpensePage onNavigate={setCurrentPage} onAdd={handleAddExpense} />}
+                                                {currentPage === 'history' && <HistoryPage expenses={expenses} onDelete={handleDeleteExpense} onNavigate={setCurrentPage} />}
+                                                {currentPage === 'food' && <FoodPage settings={settings} />}
+                                                {currentPage === 'reports' && <ReportsPage expenses={expenses} settings={settings} />}
+                                                {currentPage === 'settings' && <SettingsPage user={user} settings={settings} onSaveSettings={handleSaveSettings} onSignOut={handleSignOut} />}
+                                                {currentPage === 'admin' && isAdmin && <AdminPage />}
+                                            </motion.div>
+                                        </AnimatePresence>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                </AppContext.Provider>
+            );
+        };
+
+        // Render
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
